@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calendario Sessioni GdR</title>
+
+  <!-- FullCalendar -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/locales-all.global.min.js"></script>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <style>
+    body { font-family: sans-serif; padding: 10px; }
+    #calendar { max-width: 100%; margin: 20px auto; }
+
+    .fc-daygrid-day-number { font-size: 0.9rem; }
+
+    /* Colorazioni background */
+    .fc-daygrid-day.available { background-color: #c8f7c5 !important; }
+    .fc-daygrid-day.few { background-color: #f7f3c5 !important; }
+    .fc-daygrid-day.many { background-color: #f7d0c5 !important; }
+
+    /* Eventi (numeri) visibili ma non cliccabili */
+    .fc-event {
+      pointer-events: none !important;
+    }
+
+    .fc-event-title {
+      font-size: 1rem;
+      font-weight: bold;
+      text-align: center;
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Calendario Sessioni GdR</h1>
+  <div id="calendar"></div>
+
+  <script>
+    /* CONFIGURAZIONE FIREBASE CORRETTA */
+    const firebaseConfig = {
+      apiKey: "AIzaSyB21QjK2lqdIsUEzuUhy4eaIAM0iczvti4",
+      authDomain: "calendario-dnd-a66a9.firebaseapp.com",
+      databaseURL: "https://calendario-dnd-a66a9-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "calendario-dnd-a66a9",
+      storageBucket: "calendario-dnd-a66a9.appspot.com",
+      messagingSenderId: "199460914552",
+      appId: "1:199460914552:web:b59732743b34b8d959348d"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    /* NICKNAME */
+    let nickname = localStorage.getItem("nickname");
+    if (!nickname) {
+      nickname = prompt("Inserisci il tuo nickname:");
+      if (!nickname) nickname = "Anonimo";
+      localStorage.setItem("nickname", nickname);
+    }
+
+    /* TOGGLE DISPONIBILITÀ */
+    function toggleDisponibilita(dateStr, currentlyAvailable) {
+      const ref = db.ref("disponibilita/" + dateStr + "/" + nickname);
+      if (currentlyAvailable) ref.remove();
+      else ref.set(true);
+    }
+
+    /* AGGIORNA COLORI + NUMERI */
+    function aggiornaColori(calendar) {
+      db.ref("disponibilita").on("value", snapshot => {
+        const data = snapshot.val() || {};
+
+        calendar.getEvents().forEach(ev => ev.remove());
+
+        Object.keys(data).forEach(dateStr => {
+          const persone = Object.keys(data[dateStr] || {});
+          const count = persone.length;
+
+          /* Background color */
+          calendar.addEvent({
+            start: dateStr,
+            display: "background",
+            classNames: count === 1 ? "available" : count <= 3 ? "few" : "many"
+          });
+
+          /* Numero dei disponibili (visibile ma non cliccabile) */
+          calendar.addEvent({
+            start: dateStr,
+            title: String(count),
+            allDay: true
+          });
+        });
+      });
+    }
+
+    /* FULLCALENDAR */
+    document.addEventListener('DOMContentLoaded', function() {
+      const calendarEl = document.getElementById('calendar');
+
+      const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'it',
+        firstDay: 1,
+        contentHeight: "auto",
+        aspectRatio: 0.9,
+
+        dateClick: function(info) {
+          const dateStr = info.dateStr;
+          const ref = db.ref("disponibilita/" + dateStr);
+
+          ref.once("value").then(snapshot => {
+            const data = snapshot.val() || {};
+            const persone = Object.keys(data);
+            const ioDisponibile = persone.includes(nickname);
+
+            const lista = persone.length
+              ? persone.join("\n")
+              : "Nessuno è ancora disponibile.";
+
+            const statoMio = ioDisponibile
+              ? "Al momento SEI segnato come disponibile."
+              : "Al momento NON sei segnato come disponibile.";
+
+            const msg =
+              "Data: " + dateStr + "\n\n" +
+              "Disponibili:\n" + lista + "\n\n" +
+              statoMio + "\n\n" +
+              "Vuoi cambiare il tuo stato di disponibilità per questo giorno?";
+
+            if (confirm(msg)) toggleDisponibilita(dateStr, ioDisponibile);
+          });
+        }
+      });
+
+      calendar.render();
+      aggiornaColori(calendar);
+    });
+  </script>
+
+</body>
+</html>
