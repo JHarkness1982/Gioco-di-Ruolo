@@ -146,6 +146,12 @@
     });
   </script>
 
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/Gioco-di-Ruolo/service-worker.js");
+    }
+  </script>
+
 </body>
 </html>
 
