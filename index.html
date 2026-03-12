@@ -20,21 +20,22 @@
 
     .fc-daygrid-day-number { font-size: 0.9rem; }
 
-    /* Colorazioni background */
     .fc-daygrid-day.available { background-color: #c8f7c5 !important; }
     .fc-daygrid-day.few { background-color: #f7f3c5 !important; }
     .fc-daygrid-day.many { background-color: #f7d0c5 !important; }
 
-    /* Eventi (numeri) visibili ma non cliccabili */
-    .fc-event {
-      pointer-events: none !important;
-    }
-
+    .fc-event { pointer-events: none !important; }
     .fc-event-title {
       font-size: 1rem;
       font-weight: bold;
       text-align: center;
       width: 100%;
+    }
+
+    #set-nickname {
+      padding: 8px 12px;
+      margin-bottom: 10px;
+      font-size: 1rem;
     }
   </style>
 </head>
@@ -42,10 +43,11 @@
 <body>
 
   <h1>Calendario Sessioni D&D</h1>
+  <button id="set-nickname">Imposta/Modifica Nickname</button>
   <div id="calendar"></div>
 
   <script>
-    /* CONFIGURAZIONE FIREBASE CORRETTA */
+    /* CONFIGURAZIONE FIREBASE */
     const firebaseConfig = {
       apiKey: "AIzaSyB21QjK2lqdIsUEzuUhy4eaIAM0iczvti4",
       authDomain: "calendario-dnd-a66a9.firebaseapp.com",
@@ -59,13 +61,17 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    /* NICKNAME */
-    let nickname = localStorage.getItem("nickname");
-    if (!nickname) {
-      nickname = prompt("Inserisci il tuo nickname:");
-      if (!nickname) nickname = "Anonimo";
-      localStorage.setItem("nickname", nickname);
-    }
+    /* NICKNAME NON BLOCCANTE */
+    let nickname = localStorage.getItem("nickname") || null;
+
+    document.getElementById("set-nickname").addEventListener("click", () => {
+      const nuovo = prompt("Inserisci il tuo nickname:");
+      if (nuovo && nuovo.trim() !== "") {
+        nickname = nuovo.trim();
+        localStorage.setItem("nickname", nickname);
+        alert("Nickname aggiornato!");
+      }
+    });
 
     /* TOGGLE DISPONIBILITÀ */
     function toggleDisponibilita(dateStr, currentlyAvailable) {
@@ -85,14 +91,12 @@
           const persone = Object.keys(data[dateStr] || {});
           const count = persone.length;
 
-          /* Background color */
           calendar.addEvent({
             start: dateStr,
             display: "background",
             classNames: count === 1 ? "available" : count <= 3 ? "few" : "many"
           });
 
-          /* Numero dei disponibili (visibile ma non cliccabile) */
           calendar.addEvent({
             start: dateStr,
             title: String(count),
@@ -114,6 +118,11 @@
         aspectRatio: 0.9,
 
         dateClick: function(info) {
+          if (!nickname) {
+            alert("Prima imposta il tuo nickname.");
+            return;
+          }
+
           const dateStr = info.dateStr;
           const ref = db.ref("disponibilita/" + dateStr);
 
@@ -146,6 +155,7 @@
     });
   </script>
 
+  <!-- SERVICE WORKER -->
   <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/Gioco-di-Ruolo/pwa/sw.js", { scope: "/Gioco-di-Ruolo/" });
@@ -154,6 +164,7 @@
 
 </body>
 </html>
+
 
 
 
