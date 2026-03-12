@@ -1,7 +1,7 @@
 {
   "name": "Calendario Sessioni D&D",
   "short_name": "D&D Calendar",
-  "start_url": "/Gioco-di-Ruolo/index.html",
+  "start_url": "./"
   "scope": "/Gioco-di-Ruolo/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -19,3 +19,4 @@
     }
   ]
 }
+
