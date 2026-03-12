@@ -32,16 +32,30 @@
       width: 100%;
     }
 
-    #set-nickname {
-      padding: 8px 12px;
-      margin-bottom: 10px;
-      font-size: 1rem;
+    /* 🔥 Riduce il font del mese/anno */
+    .fc .fc-toolbar.fc-header-toolbar .fc-toolbar-title {
+      font-size: 1.1rem !important;
+      white-space: nowrap !important;
     }
 
-    /* 🔥 Riduce il font del mese/anno per evitare che vada a capo */
-    .fc-toolbar-title {
-      font-size: 1.2rem !important;
-      white-space: nowrap !important;
+    /* 🔥 Evita che i pulsanti vadano a capo */
+    .fc .fc-toolbar.fc-header-toolbar {
+      flex-wrap: nowrap !important;
+    }
+
+    /* 🔥 Versione mobile */
+    @media (max-width: 480px) {
+      .fc .fc-toolbar.fc-header-toolbar .fc-toolbar-title {
+        font-size: 1rem !important;
+      }
+    }
+
+    /* Stile del bottone nickname */
+    #set-nickname {
+      padding: 10px 14px;
+      margin-top: 20px;
+      font-size: 1rem;
+      width: 100%;
     }
   </style>
 </head>
@@ -49,8 +63,11 @@
 <body>
 
   <h1>Calendario Sessioni D&D</h1>
-  <button id="set-nickname">Imposta/Modifica Nickname</button>
+
   <div id="calendar"></div>
+
+  <!-- 🔥 Tasto nickname spostato in fondo -->
+  <button id="set-nickname">Imposta / Modifica Nickname</button>
 
   <script>
     /* CONFIGURAZIONE FIREBASE */
@@ -172,7 +189,5 @@
 
 </body>
 </html>
-
-
 
 
