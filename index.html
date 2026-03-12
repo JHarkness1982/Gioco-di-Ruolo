@@ -32,18 +32,18 @@
       width: 100%;
     }
 
-    /* 🔥 Riduce il font del mese/anno */
+    /* Riduce il font del mese/anno */
     .fc .fc-toolbar.fc-header-toolbar .fc-toolbar-title {
       font-size: 1.1rem !important;
       white-space: nowrap !important;
     }
 
-    /* 🔥 Evita che i pulsanti vadano a capo */
+    /* Evita che i pulsanti vadano a capo */
     .fc .fc-toolbar.fc-header-toolbar {
       flex-wrap: nowrap !important;
     }
 
-    /* 🔥 Versione mobile */
+    /* Versione mobile */
     @media (max-width: 480px) {
       .fc .fc-toolbar.fc-header-toolbar .fc-toolbar-title {
         font-size: 1rem !important;
@@ -66,7 +66,7 @@
 
   <div id="calendar"></div>
 
-  <!-- 🔥 Tasto nickname spostato in fondo -->
+  <!-- Tasto nickname in fondo -->
   <button id="set-nickname">Imposta / Modifica Nickname</button>
 
   <script>
@@ -84,28 +84,54 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    /* 🔥 NICKNAME SEMPRE MODIFICABILE */
+    /* Aggiorna tutte le disponibilità quando cambia il nickname */
+    function aggiornaNicknameNelDatabase(vecchioNome, nuovoNome) {
+      const ref = db.ref("disponibilita");
+
+      ref.once("value").then(snapshot => {
+        const data = snapshot.val() || {};
+
+        Object.keys(data).forEach(dateStr => {
+          const persone = data[dateStr] || {};
+
+          if (persone[vecchioNome]) {
+            persone[nuovoNome] = true;
+            delete persone[vecchioNome];
+            db.ref("disponibilita/" + dateStr).set(persone);
+          }
+        });
+      });
+    }
+
+    /* Nickname sempre modificabile */
     let nickname = localStorage.getItem("nickname") || null;
 
     function chiediNickname() {
+      const vecchio = nickname;
       const nuovo = prompt("Inserisci il tuo nickname:");
+
       if (nuovo && nuovo.trim() !== "") {
         nickname = nuovo.trim();
         localStorage.setItem("nickname", nickname);
+
+        if (vecchio && vecchio !== nickname) {
+          aggiornaNicknameNelDatabase(vecchio, nickname);
+        }
+
         alert("Nickname aggiornato!");
       }
     }
 
     document.getElementById("set-nickname").addEventListener("click", chiediNickname);
 
-    /* TOGGLE DISPONIBILITÀ */
+    /* Toggle disponibilità */
     function toggleDisponibilita(dateStr, currentlyAvailable) {
       const ref = db.ref("disponibilita/" + dateStr + "/" + nickname);
       if (currentlyAvailable) ref.remove();
       else ref.set(true);
     }
 
-    /* AGGIORNA COLORI + NUMERI */
+    /* Aggiorna colori + numeri */
     function aggiornaColori(calendar) {
       db.ref("disponibilita").on("value", snapshot => {
         const data = snapshot.val() || {};
@@ -131,7 +157,7 @@
       });
     }
 
-    /* FULLCALENDAR */
+    /* FullCalendar */
     document.addEventListener('DOMContentLoaded', function() {
       const calendarEl = document.getElementById('calendar');
 
@@ -189,5 +215,3 @@
 
 </body>
 </html>
-
-
