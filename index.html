@@ -37,6 +37,12 @@
       margin-bottom: 10px;
       font-size: 1rem;
     }
+
+    /* 🔥 Riduce il font del mese/anno per evitare che vada a capo */
+    .fc-toolbar-title {
+      font-size: 1.2rem !important;
+      white-space: nowrap !important;
+    }
   </style>
 </head>
 
@@ -61,17 +67,19 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    /* NICKNAME NON BLOCCANTE */
+    /* 🔥 NICKNAME SEMPRE MODIFICABILE */
     let nickname = localStorage.getItem("nickname") || null;
 
-    document.getElementById("set-nickname").addEventListener("click", () => {
+    function chiediNickname() {
       const nuovo = prompt("Inserisci il tuo nickname:");
       if (nuovo && nuovo.trim() !== "") {
         nickname = nuovo.trim();
         localStorage.setItem("nickname", nickname);
         alert("Nickname aggiornato!");
       }
-    });
+    }
+
+    document.getElementById("set-nickname").addEventListener("click", chiediNickname);
 
     /* TOGGLE DISPONIBILITÀ */
     function toggleDisponibilita(dateStr, currentlyAvailable) {
@@ -164,11 +172,6 @@
 
 </body>
 </html>
-
-
-
-
-
 
 
 
